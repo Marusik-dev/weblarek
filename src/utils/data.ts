@@ -35,3 +35,10 @@ export const apiProducts = {
         },
     ]
 }
+
+export const apiBuyer = {
+    "payment": "",
+    "email": "",
+    "phone": "string",
+    "address": "string"
+}
