@@ -33,8 +33,8 @@ export interface IBuyer {
   address: string;
 }
 
-export interface IOrder {
-  buyer: IBuyer;
-  items: IProduct[];
-}
+interface IOrder extends IBuyer {
+  items: string[];
+  total: number;
+} 
 

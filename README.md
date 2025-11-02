@@ -32,7 +32,7 @@ yarn start
 ## Сборка
 
 ```
-npm run build
+npm run dev
 ```
 
 или
@@ -121,8 +121,8 @@ interface IBuyer {
 
 #### Объект для отправки заказа IOrder
 interface IOrder {
-  buyer: IBuyer;
-  items: IProduct[];
+  items: string[]; // массив ид покупаемых товаров;
+  total: number; //сумма приобретаемых товаров;
 }
 
 ### Модели данных
