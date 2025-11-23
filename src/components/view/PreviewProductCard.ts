@@ -56,4 +56,15 @@ export class PreviewProductCard extends ProductCard<IPreviewProductCard> {
   set isButtonDisabled(value: boolean) {
     this.basketButton.disabled = value;
   }
+
+  updateActions(actions: IActions): void {
+    this.basketButton.replaceWith(this.basketButton.cloneNode(true));
+    
+    this.basketButton = ensureElement<HTMLButtonElement>(
+      ".card__button",
+      this.container
+    );
+    
+    this.basketButton.addEventListener("click", actions.onClick);
+  }
 }

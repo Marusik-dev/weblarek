@@ -1,10 +1,10 @@
 import { IBuyer, TPayment } from "../../types";
 
 export class Buyer {
-  private payment: TPayment;
-  private email: string;
-  private phone: string;
-  private address: string;
+  private payment: TPayment = '';
+  private email: string = '';
+  private phone: string = '';
+  private address: string = '';
 
   constructor(data?: IBuyer) {
     this.payment = data?.payment || '';

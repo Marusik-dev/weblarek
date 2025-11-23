@@ -23,12 +23,12 @@ export class Communication {
     }
   }
 
-  async placeOrder(order: IOrder): Promise<IApiOrderResponse> {
+  async createOrder(order: IOrder): Promise<IApiOrderResponse> {
     try {
-      return await this.api.post<IApiOrderResponse>("/order/", order);
+      return await this.api.post<IApiOrderResponse>("/order", order);
     } catch (error) {
-      console.error("Ошибка при отпрвке заказа:", error);
-      return { total: 0 };
+      console.error("Ошибка при отправке заказа:", error);
+      throw error;
     }
   }
 }

@@ -10,6 +10,8 @@ interface IOrderContacts {
 export class OrderContacts extends Order<IOrderContacts> {
   protected emailInputElement: HTMLInputElement;
   protected phoneInputElement: HTMLInputElement;
+  protected errorElement: HTMLElement;
+  protected submitButton: HTMLButtonElement;
 
   constructor(container: HTMLElement, protected events: IEvents) {
     super(container, events);
@@ -22,13 +24,15 @@ export class OrderContacts extends Order<IOrderContacts> {
       'input[name="phone"]',
       this.container
     );
+    this.errorElement = ensureElement('.form__errors', this.container);
+    this.submitButton = ensureElement<HTMLButtonElement>('.button[type="submit"]', this.container);
 
-    this.emailInputElement.addEventListener("change", (e) => {
+    this.emailInputElement.addEventListener("input", (e) => {
       const email = (e.target as HTMLInputElement)?.value;
       events.emit("order:email:change", { email });
     });
 
-    this.phoneInputElement.addEventListener("change", (e) => {
+    this.phoneInputElement.addEventListener("input", (e) => {
       const phone = (e.target as HTMLInputElement)?.value;
       events.emit("order:phone:change", { phone });
     });
@@ -45,5 +49,10 @@ export class OrderContacts extends Order<IOrderContacts> {
 
   set email(value: string) {
     this.emailInputElement.value = value;
+  }
+
+  setValidation(error: string, isSubmitEnabled: boolean): void {
+    this.errorElement.textContent = error;
+    this.submitButton.disabled = !isSubmitEnabled;
   }
 }
