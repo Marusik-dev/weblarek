@@ -1,4 +1,4 @@
-import { IProduct } from '../../types'
+import { IProduct } from "../../types";
 
 export class Products {
   private products: IProduct[];
@@ -12,13 +12,13 @@ export class Products {
   setProducts(products: IProduct[]): void {
     this.products = products;
   }
- 
+
   getProducts(): IProduct[] {
     return this.products;
   }
 
   getProductById(id: string): IProduct | undefined {
-    return this.products.find(p => p.id === id)
+    return this.products.find((p) => p.id === id);
   }
 
   setSelectedProduct(product: IProduct): void {

@@ -128,61 +128,75 @@ interface IOrder {
 ### Модели данных
 
 #### Класс Products
-Хранит массив всех товаров; хранит товар, выбранный для подробного отображения.
+Хранит массив всех товаров; хранит товар, выбранный для подробного отображения
 
 Конструктор:
- constructor(products: IProduct[] = [])
+constructor(products: IProduct[] = [])
 
 Поля:
-products: IProduct[] — массив всех доступных товаров.
-selectedProduct: IProduct | null — выбранный товар.
+products: IProduct[] — массив всех доступных товаров
+selectedProduct: IProduct | null — выбранный товар
 
 Методы:
-setProducts(products: IProduct[]): void — сохранение массива товаров полученного в параметрах метода.
-getProducts(): IProduct[] | undefined — получение массива товаров из модели.
-getProductById(id: string): IProduct — получение одного товара по его id.
-setSelectedProduct(product: IProduct): void — сохранение товара для подробного отображения.
-getSelectedProduct(): IProduct | null — получение товара для подробного отображения.
+setProducts(products: IProduct[]): void — сохранение массива товаров полученного в параметрах метода
+getProducts(): IProduct[] | undefined — получение массива товаров из модели
+getProductById(id: string): IProduct — получение одного товара по его id
+setSelectedProduct(product: IProduct): void — сохранение товара для подробного отображения
+getSelectedProduct(): IProduct | null — получение товара для подробного отображения
 
 #### Класс Cart
-Хранит массив товаров, выбранных покупателем для покупки.
+Хранит массив товаров, выбранных покупателем для покупки
 
 Конструктор:
 constructor(items: IProduct[] = [])
 
 Поля:
-items: IProduct[] — массив товаров, добавленных в корзину.
+items: IProduct[] — массив товаров, добавленных в корзину
 
 Методы:
-getItems(): IProduct[] — получение массива товаров, которые находятся в корзине.
-addItem(item: IProduct): void — добавление товара, который был получен в параметре, в массив корзины.
-removeItem(id: string): void — удаление товара, полученного в параметре из массива корзины.
-clear(): void — очистка корзины.
-getTotalPrice(): number — получение стоимости всех товаров в корзине.
-getCount(): number — получение количества товаров в корзине.
-hasItem(id: string): boolean — проверка наличия товара в корзине по его id, полученного в параметр метода.
+getItems(): IProduct[] — получение массива товаров, которые находятся в корзине
+addItem(item: IProduct): void — добавление товара, который был получен в параметре, в массив корзины
+removeItem(id: string): void — удаление товара, полученного в параметре из массива корзины
+clear(): void — очистка корзины
+getTotalPrice(): number — получение стоимости всех товаров в корзине
+getCount(): number — получение количества товаров в корзине
+hasItem(id: string): boolean — проверка наличия товара в корзине по его id, полученного в параметр метода
 
 #### Класс Buyer
 Хранит следующие данные:
 - вид оплаты;
-- адреc;
+- адрес;
 - телефон;
 - email.
 
 Конструктор:
-constructor(data?: IBuyer)
+constructor(data?: IBuyer)` - создает экземпляр покупателя с начальными данными (опционально)
 
 Поля:
-payment: TPayment — вид оплаты.
-address: string — адреc.
-phone: string — телефон.
-email: string — email.
+payment: TPayment — вид оплаты
+address: string — адрес  
+phone: string — телефон
+email: string — email
 
 Методы:
-setData(data: IBuyer): void — сохранение или обновление данных покупателя.
-getData(): IBuyer — получение всех данных покупателя.
-clear(): void — очистка данных покупателя.
-validate(): boolean — валидация данных.
+setData(data: IBuyer): void — сохранение или обновление всех данных покупателя
+getData(): IBuyer — получение всех данных покупателя в виде объекта
+clear(): void — полная очистка всех данных покупателя
+removeData(): void — альтернативный метод очистки данных (синоним clear)
+
+Сеттеры:
+setPayment(payment: TPayment): void — установка способа оплаты
+setEmail(email: string): void — установка email
+setPhone(phone: string): void — установка телефона  
+setAddress(address: string): void` — установка адреса
+
+Валидация:
+validate(): { payment: boolean; email: boolean; phone: boolean; address: boolean } — комплексная валидация всех полей, возвращает объект с результатами проверки каждого поля
+validateContactsForm(): { error: string; isValid: boolean } — валидация данных для формы контактов (email и телефон), возвращает объект с текстом ошибки и флагом валидности
+validateAddressForm(): { error: string; isValid: boolean } — валидация данных для формы адреса (способ оплаты и адрес), возвращает объект с текстом ошибки и флагом валидности
+
+Свойства:
+isValid: boolean — вычисляемое свойство, возвращает true если все данные валидны
 
 ### Слой коммуникации
 #### Класс Communication
@@ -194,8 +208,184 @@ validate(): boolean — валидация данных.
 api: Api - экземпляр класса Api.
 
 Методы:
-getProducts(): IPromise<IProduct[]> - получение списка товаров.
+getProducts(): IPromise<IProduct[]> - получение списка товаров
 placeOrder(order: IOrder): Promise<IApiOrderResponse> - размещение заказа
+
+### Классы слоя Представления (View)
+#### Header
+-Содержит кнопку открытия модального окна корзины.
+-Отображает количество товаров в корзине.
+
+Конструктор: constructor(container: HTMLElement, events: IEvents) 
+
+Поля: 
+basketButton: HTMLButtonElement - кнопка открытия корзины 
+counterElement: HTMLElement - счетчик товаров в корзине
+
+Методы: 
+set counter(value: number) - устанавливает количество товаров в корзине
+
+### Catalog
+Отображает список карточек товаров.
+
+Конструктор: constructor(container: HTMLElement, events: IEvents)
+
+Поля: 
+catalogElement: HTMLElement - каталог карточек товаров
+
+Методы:
+set catalog(cards: HTMLElement[]) - устанавливает список карточек товаров
+
+### Modal
+Отображает модальное окно
+
+Конструктор: constructor(container: HTMLElement, events: IEvents)
+
+Поля:
+closeButton: HTMLButtonElement - кнопка закрытия модального окна 
+contentElement: HTMLElement - контейнер для содержимого модального окна
+
+Методы:
+set content(value: HTMLElement) - устанавливает содержимое модального окна
+
+### ProductCard
+Родительский класс для всех карточек товаров (содержит общие для всех карточек поля)
+
+Конструктор: constructor(container: HTMLElement, events: IEvents)
+
+Поля:
+titleElement: HTMLElement - название товара
+priceElement: HTMLElement - цена товара
+
+Методы:
+set title(value: string) - устанавливает название товара
+set price(value: number | null) - устанавливает цену товара
+
+### CatalogProductCard
+Отображает карточку товара в каталоге товаров
+
+Конструктор: constructor(container: HTMLElement, events: IEvents)
+
+Поля: 
+categoryElement: HTMLElement - категория товара
+imageElement: HTMLImageElement - изображение товара
+
+Методы: 
+set category(value: string) - устанавливает категорию товара
+set image(value: string) - устанавливает изображение товара
+
+### PreviewProductCard
+Отображает превью карточки товара
+
+Конструктор: constructor(container: HTMLElement, events: IEvents)
+
+Поля:
+categoryElement: HTMLElement - категория товара
+imageElement: HTMLElement - изображение товара
+textElement: HTMLElement - описание товара
+basketButton: HTMLButtonElement - кнопка добавления / удаления товара из корзины.
+
+Методы:
+set category(value: string) - устанавливает категорию товара
+set image(value: string) - устанавливает изображение товара
+set text(value: string) - устанавливает описание товара
+
+### BasketProductCard
+Отображает карточку товара в корзине
+
+Конструктор: constructor(container: HTMLElement, events: IEvents)
+
+Поля:
+indexElement: HTMLElement - индекс товара в корзине
+deleteButton: HTMLButtonElement - кнопка удаления товара из корзины
+
+Методы: 
+set index(value: number) - устанавливает индекс товара в корзине
+
+### Basket
+Корзина товаров
+
+Конструктор: constructor(container: HTMLElement, events: IEvents)
+
+Поля: 
+listElement: HTMLElement - список карточек товаров в корзине
+orderButton: HTMLButtonElement - кнопка оформления заказа
+orderAmountElement: HTMLElement - сумма заказа
+
+Методы: 
+set items(value: HTMLElement[]) - устанавливает список товаров в корзине
+set orderAmount(value: number) - устанавливает сумму заказа
+
+### Order
+Родительский класс заказа (содержит общие поля и методы для всех заказов)
+
+Конструктор: constructor(container: HTMLElement, events: IEvents)
+
+Поля:
+formErrorsElement: HTMLElement - ошибки формы
+submitButton: HTMLButtonElement - кнопка отправки формы
+
+Методы: 
+set errors:(value: string) - устанавливаем ошибки формы
+
+### OrderAddress
+Заказ: способ оплаты и адрес доставки
+
+Конструктор: constructor(container: HTMLElement, events: IEvents)
+
+Поля:
+cardButton: HTMLButtonElement - кнопка оплата онлайн
+cashButton: HTMLButtonElement - кнопка оплата при получении
+addressInput: HTMLElement - адрес доставки
+
+### OrderContacts
+Заказ: email и телефон
+
+Конструктор: constructor(container: HTMLElement, events: IEvents)
+
+Поля:
+emailInput: HTMLElement - email
+phoneInput: HTMLElement - телефон
+
+### OrderSuccess
+Заказ успешно оформлен
+
+Конструктор: constructor(container: HTMLElement, events: IEvents)
+
+Поля: 
+descriptionElement: HTMLElement - описание заказа
+closeButton: HTMLButtonElement - кнопка закрытия
+
+Методы:
+set orderAmount(value: number) - устанавливает сумму заказа
+
+### События
+catalog:change - изменены данные о списке товаров
+catalog:product:click - нажатие на карточку товара в каталоге
+product:details:button:click - нажатие на кнопку в карточке превью товара
+
+modal:open - открыть модвльное окно
+modal:close - закрыть модальное окно
+
+basket:open - открыть корзину
+basket:change - обновить данные в корзине 
+basket:product:remove - удалить товар из корзины
+basket:create:order - оформить заказ
+
+order:payment:change - изменился способ оплаты в заказе
+order:address:change - изменился адрес доставки в заказе
+order:phone:change - изменился телефон в заказе
+order:email:change - изменился email в заказе
+order:submit - создать заказ
+order:done - заказ успешно оформлен, закрыть форму
+
+### Презентер
+- Получает данные о товарах с сервера
+- Инициализирует классы моделей и предствлений
+- Обрабатывает события от моделей и представлений
+
+
+
 
 
 
