@@ -40,6 +40,7 @@ let previewProductCard: PreviewProductCard;
 
 // Состояние приложения
 let isBasketOpen = false;
+let basketContent: HTMLElement;
 
 // Presenter
 const initApp = async (): Promise<void> => {
@@ -57,9 +58,16 @@ const initViews = (): void => {
   orderAddress = new OrderAddress(cloneTemplate('#order'), events);
   orderSuccess = new OrderSuccess(cloneTemplate('#success'), events);
   
+  basketContent = getBasketContent();
+  
   const previewContainer = cloneTemplate("#card-preview");
   const previewActions = {
-    onClick: () => events.emit("product:preview:button:click", {} as IProduct),
+    onClick: () => {
+      const product = products.getSelectedProduct();
+      if (product) {
+        events.emit("product:preview:button:click", product);
+      }
+    },
   };
   previewProductCard = new PreviewProductCard(previewContainer, previewActions);
 };
@@ -73,6 +81,7 @@ const initEventHandlers = (): void => {
   events.on("modal:close", handleModalClose);
   
   // Товары
+  events.on("product:preview:render", handleProductPreviewRender);
   events.on("product:preview:button:click", handleProductButtonClick);
   
   // Корзина
@@ -110,6 +119,15 @@ const handleCatalogChange = (): void => {
 };
 
 const handleProductClick = (product: IProduct): void => {
+  products.setSelectedProduct(product);
+  events.emit("product:preview:render");
+};
+
+const handleProductPreviewRender = (): void => {
+  const product = products.getSelectedProduct();
+  
+  if (!product) return;
+
   const actions = {
     onClick: () => events.emit("product:preview:button:click", product),
   };
@@ -167,10 +185,10 @@ const handleBasketChange = (): void => {
   const counter = cart.getCount();
   header.render({ counter });
 
-  const content = getBasketContent();
+  basketContent = getBasketContent();
 
   if (isBasketOpen) {
-    modal.render({ content });
+    modal.render({ content: basketContent });
   }
 };
 
@@ -185,8 +203,7 @@ const handleBasketCreateOrder = (): void => {
 };
 
 const handleBasketOpen = (): void => {
-  const content = getBasketContent();
-  modal.render({ content });
+  modal.render({ content: basketContent });
   modal.open();
   isBasketOpen = true;
 };
@@ -203,7 +220,6 @@ const getOrderAddressContent = (): HTMLElement => {
   return orderAddress.render({ ...data, error, isSubmitEnabled: isValid });
 };
 
-// Обработчики заказа с мгновенной валидацией
 const handleOrderPaymentChange = ({ payment }: { payment: TPayment }): void => {
   buyer.setPayment(payment);
   const { error = "", isValid } = buyer.validateAddressForm();
@@ -242,7 +258,7 @@ const createOrder = async (): Promise<void> => {
     const orderResponse = await communication.createOrder(orderData);
     
     // Если заказ успешно создан
-    const orderAmount = cart.getTotalPrice();
+    const orderAmount = orderResponse.total;
     cart.clear();
     buyer.removeData();
 
@@ -252,7 +268,6 @@ const createOrder = async (): Promise<void> => {
     console.log('Заказ успешно создан:', orderResponse);   
   } catch (error) {
     console.error('Ошибка при создании заказа:', error);
-    alert('Произошла ошибка при оформлении заказа. Попробуйте еще раз.');
   }
 };
 
@@ -270,11 +285,15 @@ const handleOrderDone = (): void => {
 };
 
 const fetchProducts = async (): Promise<void> => {
+  try {
     const productsList = await communication.getProducts();
     products.setProducts(productsList);
+  } catch (error) {
+    console.error('Ошибка при загрузке товаров:', error);
+  }
 };
 
-// Инициализация приложения
-document.addEventListener("DOMContentLoaded", async () => {
+// Инициализация приложения 
+document.addEventListener("DOMContentLoaded", async () => { 
   await initApp();
-});
+}); 

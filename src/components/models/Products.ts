@@ -27,6 +27,7 @@ export class Products {
 
   setSelectedProduct(product: IProduct): void {
     this.selectedProduct = product;
+    this.events.emit("product:preview:render");
   }
 
   getSelectedProduct(): IProduct | null {
