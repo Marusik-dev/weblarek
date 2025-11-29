@@ -30,17 +30,15 @@ const api = new Api(API_URL);
 const communication = new Communication(api);
 
 // View компоненты
-let header: Header;
-let modal: Modal;
-let basket: Basket;
-let orderContacts: OrderContacts;
-let orderAddress: OrderAddress;
-let orderSuccess: OrderSuccess;
-let previewProductCard: PreviewProductCard;
-
-// Состояние приложения
-let isBasketOpen = false;
-let basketContent: HTMLElement;
+const views: {
+  header?: Header;
+  modal?: Modal;
+  basket?: Basket;
+  orderContacts?: OrderContacts;
+  orderAddress?: OrderAddress;
+  orderSuccess?: OrderSuccess;
+  previewProductCard?: PreviewProductCard;
+} = {};
 
 // Presenter
 const initApp = async (): Promise<void> => {
@@ -51,14 +49,12 @@ const initApp = async (): Promise<void> => {
 };
 
 const initViews = (): void => {
-  header = new Header(ensureElement(".header__container"), events);
-  modal = new Modal(ensureElement("#modal-container"), events);
-  basket = new Basket(cloneTemplate("#basket"), events);
-  orderContacts = new OrderContacts(cloneTemplate('#contacts'), events);
-  orderAddress = new OrderAddress(cloneTemplate('#order'), events);
-  orderSuccess = new OrderSuccess(cloneTemplate('#success'), events);
-  
-  basketContent = getBasketContent();
+  views.header = new Header(ensureElement(".header__container"), events);
+  views.modal = new Modal(ensureElement("#modal-container"), events);
+  views.basket = new Basket(cloneTemplate("#basket"), events);
+  views.orderContacts = new OrderContacts(cloneTemplate('#contacts'), events);
+  views.orderAddress = new OrderAddress(cloneTemplate('#order'), events);
+  views.orderSuccess = new OrderSuccess(cloneTemplate('#success'), events);
   
   const previewContainer = cloneTemplate("#card-preview");
   const previewActions = {
@@ -69,7 +65,7 @@ const initViews = (): void => {
       }
     },
   };
-  previewProductCard = new PreviewProductCard(previewContainer, previewActions);
+  views.previewProductCard = new PreviewProductCard(previewContainer, previewActions);
 };
 
 const initEventHandlers = (): void => {
@@ -104,7 +100,9 @@ const handleCatalogChange = (): void => {
   const cards = products.getProducts().map((product) => {
     const container = cloneTemplate("#card-catalog");
     const actions = {
-      onProductClick: () => events.emit("catalog:product:click", product),
+      onProductClick: () => {
+        events.emit("catalog:product:click", product);
+      },
     };
 
     const card = new CatalogProductCard(container, actions);
@@ -120,7 +118,6 @@ const handleCatalogChange = (): void => {
 
 const handleProductClick = (product: IProduct): void => {
   products.setSelectedProduct(product);
-  events.emit("product:preview:render");
 };
 
 const handleProductPreviewRender = (): void => {
@@ -129,10 +126,12 @@ const handleProductPreviewRender = (): void => {
   if (!product) return;
 
   const actions = {
-    onClick: () => events.emit("product:preview:button:click", product),
+    onClick: () => {
+      events.emit("product:preview:button:click", product);
+    },
   };
   
-  previewProductCard.updateActions(actions);
+  views.previewProductCard!.updateActions(actions);
 
   const isProductInCart = cart.hasItem(product.id);
   const buttonLabel = product.price
@@ -142,23 +141,22 @@ const handleProductPreviewRender = (): void => {
     : "Недоступно";
   const isButtonDisabled = !product.price;
   
-  const content = previewProductCard.render({
+  const content = views.previewProductCard!.render({
     ...product,
     buttonLabel,
     isButtonDisabled,
   });
 
-  modal.render({ content });
-  modal.open();
+  views.modal!.render({ content });
+  views.modal!.open();
 };
 
 const handleModalClose = (): void => {
-  isBasketOpen = false;
-  modal.close();
+  views.modal!.close();
 };
 
 const handleProductButtonClick = (product: IProduct): void => {
-  modal.close();
+  views.modal!.close();
 
   if (cart.hasItem(product.id)) {
     cart.removeItem(product.id);
@@ -167,29 +165,23 @@ const handleProductButtonClick = (product: IProduct): void => {
   }
 };
 
-const getBasketContent = (): HTMLElement => {
+const handleBasketChange = (): void => {
+  const counter = cart.getCount();
+  views.header!.render({ counter });
+
   const items = cart.getItems().map((product, index) => {
     const container = cloneTemplate("#card-basket");
     const actions = {
-      onRemoveItem: () => events.emit("basket:product:remove", product),
+      onRemoveItem: () => {
+        events.emit("basket:product:remove", product);
+      },
     };
     const card = new BasketProductCard(container, actions);
     return card.render({ ...product, index: index + 1 });
   });
 
   const orderAmount = cart.getTotalPrice();
-  return basket.render({ items, orderAmount });
-};
-
-const handleBasketChange = (): void => {
-  const counter = cart.getCount();
-  header.render({ counter });
-
-  basketContent = getBasketContent();
-
-  if (isBasketOpen) {
-    modal.render({ content: basketContent });
-  }
+  views.basket!.render({ items, orderAmount });
 };
 
 const handleBasketProductRemove = (product: IProduct): void => {
@@ -197,52 +189,50 @@ const handleBasketProductRemove = (product: IProduct): void => {
 };
 
 const handleBasketCreateOrder = (): void => {
-  isBasketOpen = false;
   const content = getOrderAddressContent();
-  modal.render({ content });
+  views.modal!.render({ content });
 };
 
 const handleBasketOpen = (): void => {
-  modal.render({ content: basketContent });
-  modal.open();
-  isBasketOpen = true;
+  views.modal!.render({ content: views.basket!.render() });
+  views.modal!.open();
 };
 
 const getOrderContactsContent = (): HTMLElement => {
   const data = buyer.getData();
   const { error = "", isValid } = buyer.validateContactsForm();
-  return orderContacts.render({ ...data, error, isSubmitEnabled: isValid });
+  return views.orderContacts!.render({ ...data, error, isSubmitEnabled: isValid });
 };
 
 const getOrderAddressContent = (): HTMLElement => {
   const data = buyer.getData();
   const { error = "", isValid } = buyer.validateAddressForm();
-  return orderAddress.render({ ...data, error, isSubmitEnabled: isValid });
+  return views.orderAddress!.render({ ...data, error, isSubmitEnabled: isValid });
 };
 
 const handleOrderPaymentChange = ({ payment }: { payment: TPayment }): void => {
   buyer.setPayment(payment);
   const { error = "", isValid } = buyer.validateAddressForm();
-  orderAddress.setValidation(error, isValid);
-  orderAddress.payment = payment;
+  views.orderAddress!.setValidation(error, isValid);
+  views.orderAddress!.payment = payment;
 };
 
 const handleOrderAddressChange = ({ address }: { address: string }): void => {
   buyer.setAddress(address);
   const { error = "", isValid } = buyer.validateAddressForm();
-  orderAddress.setValidation(error, isValid);
+  views.orderAddress!.setValidation(error, isValid);
 };
 
 const handleOrderEmailChange = ({ email }: { email: string }): void => {
   buyer.setEmail(email);
   const { error = "", isValid } = buyer.validateContactsForm();
-  orderContacts.setValidation(error, isValid);
+  views.orderContacts!.setValidation(error, isValid);
 };
 
 const handleOrderPhoneChange = ({ phone }: { phone: string }): void => {
   buyer.setPhone(phone);
   const { error = "", isValid } = buyer.validateContactsForm();
-  orderContacts.setValidation(error, isValid);
+  views.orderContacts!.setValidation(error, isValid);
 };
 
 const createOrder = async (): Promise<void> => {
@@ -262,8 +252,8 @@ const createOrder = async (): Promise<void> => {
     cart.clear();
     buyer.removeData();
 
-    const content = orderSuccess.render({ orderAmount });
-    modal.render({ content });
+    const content = views.orderSuccess!.render({ orderAmount });
+    views.modal!.render({ content });
     
     console.log('Заказ успешно создан:', orderResponse);   
   } catch (error) {
@@ -274,14 +264,14 @@ const createOrder = async (): Promise<void> => {
 const handleOrderSubmit = ({ step }: { step: "address" | "contacts" }): void => {
   if (step === "address") {
     const content = getOrderContactsContent();
-    modal.render({ content });
+    views.modal!.render({ content });
   } else if (step === "contacts") {
     createOrder();
   }
 };
 
 const handleOrderDone = (): void => {
-  modal.close();
+  views.modal!.close();
 };
 
 const fetchProducts = async (): Promise<void> => {
@@ -296,4 +286,4 @@ const fetchProducts = async (): Promise<void> => {
 // Инициализация приложения 
 document.addEventListener("DOMContentLoaded", async () => { 
   await initApp();
-}); 
+});
